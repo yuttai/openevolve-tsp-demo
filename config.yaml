@@ -1,33 +1,26 @@
 # ============================================================
-#  OpenEvolve 設定檔 —— 課堂用(本地 Ollama + 千問 qwen2.5-coder)
+#  OpenEvolve 設定檔 —— 課堂用(本地 Ollama + 7B 模型)
 # ============================================================
-#  用 qwen2.5-coder:7b —— 小模型裡寫 diff 最穩的,演化效果可靠。
-#  (codegemma:2b 等小模型寫不出合格 diff,會整場空轉,故改用此模型。)
-#
-#  顯卡夠力(20GB+)可換 qwen2.5-coder:14b,品質更好;
-#  記得 notebook 第 1 步的 ollama pull 也要改成一樣的名字。
-#
-#  注意:api_key 寫 "ollama" 是必要的假值。
-#  Ollama 不檢查金鑰,但 OpenAI 相容客戶端硬性要求要有,不可省略。
+#  這份設定刻意為「最差情況的 8GB 顯卡」調過,壓小 context、降低 VRAM 壓力。
+#  如果你的顯卡是 20GB 以上(RTX 4000 Ada / Blackwell),
+#  可以把 model 換成 qwen2.5-coder:14b,並把下面的數字調大,效果更好。
 # ============================================================
 
-max_iterations: 30        # 課堂用,刻意縮小,確保快速跑完
-
+# ---- LLM:連到「本機」的 Ollama ----
 llm:
-  api_base: "http://localhost:11434/v1"   # 本機 Ollama 位址
-  api_key: "ollama"                        # 假金鑰(必填,Ollama 不檢查)
-  models:
-    - name: "qwen2.5-coder:7b"             # 課前已用 ollama pull 下載的模型
-      api_base: "http://localhost:11434/v1"
-      api_key: "ollama"
-      weight: 1.0
+  api_base: "http://localhost:11434/v1"   # 本機 Ollama 的位址,不用改
+  model: "qwen2.5-coder:7b"                # 課前已用 ollama pull 下載的模型
   temperature: 0.7
   max_tokens: 4096
 
-database:
-  population_size: 6
-  num_islands: 2
+# ---- 演化規模:課堂用,刻意縮小,確保 30 代內快速跑完 ----
+max_iterations: 30
 
+database:
+  population_size: 6      # 同時維持的程式數量(小=省 VRAM、跑得快)
+  num_islands: 2          # 平行演化的「島」數量
+
+# ---- prompt:壓小塞給 LLM 的歷史版本數量,減輕 8GB 卡的 KV cache 壓力 ----
 prompt:
-  num_top_programs: 2
-  num_diverse_programs: 1
+  num_top_programs: 2     # 參考「最好的幾個」版本
+  num_diverse_programs: 1 # 參考「比較不一樣的」版本(維持多樣性)
